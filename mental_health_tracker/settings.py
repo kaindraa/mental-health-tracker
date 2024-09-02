@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-odlfui$%-)4okz6($gw^+$w)z&=!5f)$=7pe*o(3lgl8m**ta%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "kaindra-rizq-mentalhealthtracker.pbp.cs.ui.ac.id"]
 
 
 # Application definition
