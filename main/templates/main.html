@@ -1,49 +1,65 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block meta %}
+<title>Mental Health Tracker</title>
+{% endblock meta %}
+
 {% block content %}
-<h1>Mental Health Tracker</h1>
+{% include 'navbar.html' %}
+<div class="overflow-x-hidden px-4 md:px-8 pb-8 pt-24 min-h-screen bg-gray-100 flex flex-col items-center">
+  <!-- Header Section with purple background -->
+  <div class="bg-indigo-600 w-full max-w-5xl flex items-center justify-between px-6 py-4 rounded-md shadow-lg mb-8">
+    <h1 class="text-white text-2xl font-bold">Mental Health Tracker</h1>
+    <div class="flex items-center">
+      <span class="text-white mr-4">Welcome, {{ user.username }}</span>
+      <a href="{% url 'main:logout' %}" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-300">
+        Logout
+      </a>
+    </div>
+  </div>
 
-<h5>NPM: </h5>
-<p>{{ npm }}<p>
+  <!-- Info Cards in Centered Layout with purple color -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 w-full max-w-5xl mb-8 px-4">
+    {% include "card_info.html" with title='NPM' value=npm %}
+    {% include "card_info.html" with title='Name' value=name %}
+    {% include "card_info.html" with title='Class' value=class %}
+  </div>
 
-<h5>Name:</h5>
-<p>{{ name }}</p>
+  <!-- Add New Mood Entry Section -->
+  <div class="flex justify-end w-full max-w-5xl mb-6 px-4">
+    <a href="{% url 'main:create_mood_entry' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300 ease-in-out transform hover:-translate-y-1 hover:scale-105">
+      Add New Mood Entry
+    </a>
+  </div>
 
-<h5>Class:</h5>
-<p>{{ class }}</p>
-...
-{% if not mood_entries %}
-<p>Belum ada data mood pada mental health tracker.</p>
-{% else %}
-<table>
-  <tr>
-    <th>Mood Name</th>
-    <th>Time</th>
-    <th>Feeling</th>
-    <th>Mood Intensity</th>
-  </tr>
-
-  {% comment %} Berikut cara memperlihatkan data mood di bawah baris ini 
-  {% endcomment %} 
-  {% for mood_entry in mood_entries %}
-  <tr>
-    <td>{{mood_entry.mood}}</td>
-    <td>{{mood_entry.time}}</td>
-    <td>{{mood_entry.feelings}}</td>
-    <td>{{mood_entry.mood_intensity}}</td>
-  </tr>
-  {% endfor %}
-</table>
-{% endif %}
-
-<br />
-
-<a href="{% url 'main:create_mood_entry' %}">
-  <button>Add New Mood Entry</button>
-  <a href="{% url 'main:logout' %}">
-    <button>Logout</button>
-    <h5>Sesi terakhir login: {{ last_login }}</h5>
-  </a>
-...
-</a>
+  <!-- Mood Entries Section with Responsive Card Display -->
+  {% if not mood_entries %}
+  <div class="flex flex-col items-center justify-center min-h-[24rem] p-6">
+    <img src="{% static 'image/sedih-banget.png' %}" alt="Sad face" class="w-32 h-32 mb-4"/>
+    <p class="text-center text-gray-600 mt-4">Belum ada data mood pada mental health tracker.</p>
+  </div>
+  {% else %}
+  <div class="flex flex-wrap justify-center gap-6 w-full max-w-5xl">
+    {% for mood_entry in mood_entries %}
+      <div class="bg-indigo-100 shadow-md rounded-lg border-2 border-indigo-300 p-4 w-full sm:w-[calc(50%-1rem)] md:w-[calc(33%-1rem)] transform transition-transform duration-300 hover:scale-105 hover:rotate-1">
+        <h3 class="text-indigo-800 font-bold text-lg">{{ mood_entry.mood }}</h3>
+        <p class="text-gray-600">{{ mood_entry.time }}</p>
+        <p class="text-gray-700 mt-2">{{ mood_entry.feelings }}</p>
+        <div class="flex justify-between items-center mt-4">
+          <span class="bg-indigo-500 text-white rounded-full px-3 py-1 text-sm">{{ mood_entry.mood_intensity }}</span>
+          <div class="flex space-x-2">
+            <a href="{% url 'main:edit_mood' mood_entry.pk %}" class="bg-yellow-500 hover:bg-yellow-600 text-white rounded-full p-2 transition duration-300">
+              Edit
+            </a>
+            <a href="{% url 'main:delete_mood' mood_entry.pk %}" class="bg-red-500 hover:bg-red-600 text-white rounded-full p-2 transition duration-300">
+              Delete
+            </a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
 {% endblock content %}
-
