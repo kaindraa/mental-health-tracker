@@ -12,6 +12,9 @@ class MoodEntry(models.Model):
     mood_intensity = models.IntegerField()
 
 
+    
+
+
 
     @property
     def is_mood_strong(self):

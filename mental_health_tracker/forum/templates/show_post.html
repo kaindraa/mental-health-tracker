@@ -1,0 +1,219 @@
+<!-- templates/forum/show_post.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forum - Jelajahi Makanan di Surabaya!</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <!-- Font Awesome CDN for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        body {
+            font-family: var(--font-family-primary); /* Use Helvetica Neue from base.css */
+        }
+        .header-wrapper {
+            background-color: #FFD700; /* Explicit yellow background */
+            color: var(--text-color); /* Black text */
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .header-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .content-wrapper {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .post-card {
+            background-color: var(--background-color);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            padding: 20px;
+        }
+        .post-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .post-header img {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            margin-right: 15px;
+        }
+        .post-content {
+            margin-top: 10px;
+            font-size: 16px;
+        }
+        .post-actions {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 15px;
+            border-top: 1px solid var(--hairline-color);
+            padding-top: 10px;
+        }
+        .post-actions button {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+        .post-actions button i {
+            margin-right: 5px;
+        }
+        .liked {
+            color: var(--primary) !important; /* Green when liked */
+            font-weight: bold;
+        }
+        .comments-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid var(--border-color);
+        }
+        .comment-form textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            border: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Yellow Header Section -->
+    <div class="header-wrapper">
+        <div class="header-content">
+            <h1>Jelajahi Makanan di Surabaya!</h1>
+            <p><strong>Temukan makanan terbaik di kota dan bergabunglah dalam diskusi dengan pengguna lainnya.</strong></p>
+            <a href="{% url 'forum:add_post' %}" class="btn">Posting di Forum</a> <!-- Button styled with base.css -->
+        </div>
+    </div>
+
+    <div class="content-wrapper">
+        <!-- Main Content -->
+        <main>
+            <section class="post-list">
+                {% for post in posts %}
+                <article class="post-card">
+                    <div class="post-header">
+                        <img src="{% static 'images/user-avatar.png' %}" alt="User Profile">
+                        <div class="user-info">
+                            <h3>{{ post.user.username }}</h3>
+                            <p class="small-text">Posted {{ post.created_at|timesince }} ago</p>
+                        </div>
+                    </div>
+                    <div class="post-content">
+                        <p>{{ post.text }}</p>
+                        {% if post.image %}
+                        <img src="{{ post.image.url }}" alt="Post Image" style="max-width: 100%; border-radius: 8px; margin-top: 15px;">
+                        {% endif %}
+                    </div>
+                    <div class="post-actions">
+                        <button 
+                            onclick="handleLike({{ post.id }})" 
+                            id="like-btn-{{ post.id }}"
+                            class="{% if post.id in user_liked_posts %}liked{% endif %}"
+                        >
+                            <i class="fas fa-thumbs-up"></i> Like
+                        </button>
+                        <button onclick="toggleComments({{ post.id }})"><i class="fas fa-comment"></i> Comment</button>
+                        <button onclick="handleShare({{ post.id }})"><i class="fas fa-share"></i> Share</button>
+                        <button onclick="handleReport({{ post.id }})"><i class="fas fa-flag"></i> Report</button>
+                    </div>
+                    <div id="comments-{{ post.id }}" class="comments-section" style="display: none;">
+                        <h4>Comments</h4>
+                        <div class="existing-comments">
+                            {% for comment in post.comments.all %}
+                                <p><strong>{{ comment.user.username }}:</strong> {{ comment.text }}</p>
+                            {% empty %}
+                                <p>No comments yet.</p>
+                            {% endfor %}
+                        </div>
+                        <form class="comment-form" onsubmit="postComment(event, {{ post.id }})">
+                            <textarea name="comment" placeholder="Add a comment..." required></textarea>
+                            <button type="submit" class="btn">Post Comment</button> <!-- Use button style from base.css -->
+                        </form>
+                    </div>
+                </article>
+                {% empty %}
+                <p class="text-center">Tidak ada postingan tersedia.</p>
+                {% endfor %}
+            </section>
+        </main>
+    </div>
+
+    <!-- JavaScript Functions -->
+    <script>
+        function handleLike(postId) {
+            fetch(`/like_post/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ post_id: postId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const likeButton = document.querySelector(`#like-btn-${postId}`);
+                if (data.success) {
+                    likeButton.classList.toggle('liked', data.liked);
+                } else {
+                    alert(`Failed to like the post: ${data.error}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+
+        function toggleComments(postId) {
+            const commentsSection = document.getElementById(`comments-${postId}`);
+            commentsSection.style.display = commentsSection.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function postComment(event, postId) {
+            event.preventDefault();
+            const commentInput = event.target.querySelector('textarea');
+            const commentText = commentInput.value;
+
+            fetch(`/post_comment/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ post_id: postId, comment: commentText })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const commentsSection = document.querySelector(`#comments-${postId} .existing-comments`);
+                    const newComment = document.createElement('p');
+                    newComment.innerHTML = `<strong>${data.username}:</strong> ${data.comment}`;
+                    commentsSection.appendChild(newComment);
+                    commentInput.value = '';
+                } else {
+                    alert(`Failed to post comment: ${data.error}`);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>

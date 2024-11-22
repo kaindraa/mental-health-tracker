@@ -1,5 +1,11 @@
+from django.conf import settings
+from django.conf.urls.static import static
+from django.contrib import admin
+from django.urls import path, include
+
+
 """
-URL configuration for mental_health_tracker project.
+URL configuration for GolekMakanRek project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.1/topics/http/urls/
@@ -19,6 +25,8 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('main.urls')),
-    path('auth/', include('authentication.urls')), 
+    path('', include('forum.urls')),  # Mengarahkan URL root ke aplikasi 'forum'
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
